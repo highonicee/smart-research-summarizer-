@@ -2,9 +2,9 @@ import streamlit as st
 
 
 def init_theme_toggle():
-    """Initialize theme toggle in session state"""
+    """Initialize theme toggle in session state with dark mode as default"""
     if 'dark_mode' not in st.session_state:
-        st.session_state.dark_mode = False
+        st.session_state.dark_mode = True  # Changed to True for dark mode default
 
 
 def create_theme_toggle():
@@ -51,7 +51,7 @@ def create_theme_toggle():
 
 def apply_theme_styles():
     """Apply comprehensive theme styles based on current mode"""
-    dark_mode = st.session_state.get('dark_mode', False)
+    dark_mode = st.session_state.get('dark_mode', True)  # Changed default to True
 
     if dark_mode:
         theme_css = """
@@ -498,7 +498,7 @@ def apply_theme_styles():
 
 def get_theme_aware_summary_style():
     """Return appropriate styling for summary boxes based on current theme"""
-    dark_mode = st.session_state.get('dark_mode', False)
+    dark_mode = st.session_state.get('dark_mode', True)  # Changed default to True
 
     if dark_mode:
         return {
@@ -535,7 +535,7 @@ def force_cache_clear():
 
 def get_current_theme():
     """Get current theme mode"""
-    return "dark" if st.session_state.get('dark_mode', False) else "light"
+    return "dark" if st.session_state.get('dark_mode', True) else "light"  # Changed default to True
 
 
 def create_theme_status_indicator():
@@ -565,7 +565,7 @@ def create_theme_status_indicator():
 
 # Quick setup function for easy integration
 def setup_theme_toggle():
-    """One-line setup for theme toggle with cache clearing"""
+    """One-line setup for theme toggle with cache clearing and dark mode default"""
     create_theme_toggle()
     apply_theme_styles()
     force_cache_clear()
@@ -574,7 +574,7 @@ def setup_theme_toggle():
 # Utility functions for easy integration
 def apply_custom_theme_css(custom_css_dark="", custom_css_light=""):
     """Allow users to add custom CSS for each theme"""
-    dark_mode = st.session_state.get('dark_mode', False)
+    dark_mode = st.session_state.get('dark_mode', True)  # Changed default to True
 
     if dark_mode and custom_css_dark:
         st.markdown(f"<style>{custom_css_dark}</style>", unsafe_allow_html=True)
@@ -584,4 +584,11 @@ def apply_custom_theme_css(custom_css_dark="", custom_css_light=""):
 
 def theme_aware_color(dark_color, light_color):
     """Return appropriate color based on current theme"""
-    return dark_color if st.session_state.get('dark_mode', False) else light_color
+    return dark_color if st.session_state.get('dark_mode', True) else light_color  # Changed default to True
+
+
+# Alternative initialization function for forced dark mode default
+def force_dark_mode_default():
+    """Force dark mode as default regardless of previous session state"""
+    st.session_state.dark_mode = True
+    setup_theme_toggle()
