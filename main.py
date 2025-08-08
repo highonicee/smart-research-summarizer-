@@ -64,27 +64,6 @@ except ImportError as import_error:
     fitz = MockFitz()
     PDF_AVAILABLE = False
 
-# Import theme toggle with fallback
-try:
-    from theme_toggle import create_theme_toggle, apply_theme_styles, get_current_theme
-
-    THEME_AVAILABLE = True
-except ImportError:
-    THEME_AVAILABLE = False
-
-
-    # Define fallback functions
-    def create_theme_toggle():
-        pass
-
-
-    def apply_theme_styles():
-        pass
-
-
-    def get_current_theme():
-        return "dark"  # Changed to dark as default
-
 # Try importing visualization libraries with fallbacks
 try:
     import plotly.express as px
@@ -112,61 +91,6 @@ except ImportError:
     px = MockPx()
     go = MockGo()
     PLOTLY_AVAILABLE = False
-
-# Import the CSS handler with error handling
-try:
-    from css_handler import (
-        load_cross_browser_css,
-        create_safe_chart_container,
-        create_safe_metrics,
-        create_safe_summary_box,
-        create_safe_download_button,
-        get_plotly_light_theme,
-        get_plotly_dark_theme,
-        apply_cross_browser_fixes,
-        initialize_cross_browser_support
-    )
-
-    CSS_HANDLER_AVAILABLE = True
-except ImportError:
-    CSS_HANDLER_AVAILABLE = False
-
-
-    # Define fallback functions
-    def load_cross_browser_css():
-        return False
-
-
-    def create_safe_chart_container(content_func, is_light_mode=True):
-        content_func()
-
-
-    def create_safe_metrics(value, label, is_light_mode=True):
-        st.metric(label, value)
-
-
-    def create_safe_summary_box(summary_text, is_light_mode=True):
-        st.info(summary_text)
-
-
-    def create_safe_download_button(label, data, filename, mime_type="text/plain", help_text=None):
-        st.download_button(label, data, filename, mime_type, help=help_text)
-
-
-    def get_plotly_light_theme():
-        return {}
-
-
-    def get_plotly_dark_theme():
-        return {}
-
-
-    def apply_cross_browser_fixes():
-        pass
-
-
-    def initialize_cross_browser_support():
-        return False
 
 
 def basic_summarize(text, max_sentences=5):
@@ -254,7 +178,7 @@ def advanced_summarize(text, min_length=50, max_length=200):
 
 
 def generate_word_frequency_chart(text):
-    """Generate word frequency chart using Plotly with cross-browser compatibility"""
+    """Generate word frequency chart using Plotly with improved text visibility"""
     if not PLOTLY_AVAILABLE:
         st.info("📊 Install Plotly for interactive visualizations: pip install plotly")
         return
@@ -281,10 +205,7 @@ def generate_word_frequency_chart(text):
 
         words_list, frequencies = zip(*word_freq)
 
-        # Check if we're in light mode (dark mode is now default)
-        is_light_mode = st.session_state.get("light_mode", False)
-
-        # Create interactive bar chart with cross-browser compatibility
+        # Create interactive bar chart with improved text visibility
         fig = px.bar(
             x=list(frequencies),
             y=list(words_list),
@@ -292,40 +213,42 @@ def generate_word_frequency_chart(text):
             title="Top 15 Most Frequent Words",
             labels={'x': 'Frequency', 'y': 'Words'},
             color=list(frequencies),
-            color_continuous_scale='Greens' if is_light_mode else 'Viridis'
+            color_continuous_scale='Greens'
         )
 
-        # Apply cross-browser compatible theme
-        if is_light_mode:
-            theme_config = get_plotly_light_theme()
-            fig.update_layout(**theme_config['layout'])
-            fig.update_layout(
-                title_font_color='#059669',
-                yaxis={'categoryorder': 'total ascending'},
-                height=500,
-                title_x=0.5,
-                title_font_size=18,
-                title_font_weight='bold'
-            )
-        else:
-            theme_config = get_plotly_dark_theme()
-            fig.update_layout(**theme_config['layout'])
-            fig.update_layout(
-                title_font_color='white',
-                yaxis={'categoryorder': 'total ascending'},
-                height=500,
-                title_x=0.5,
-                title_font_size=18,
-                title_font_weight='bold'
-            )
+        # Improved layout with better text contrast
+        fig.update_layout(
+            paper_bgcolor='rgba(15, 27, 15, 0.9)',
+            plot_bgcolor='rgba(15, 27, 15, 0.9)',
+            title_font_color='#22c55e',
+            title_font_size=20,
+            title_font_weight='bold',
+            yaxis={
+                'categoryorder': 'total ascending',
+                'tickfont': {'color': '#f8fafc', 'size': 14},
+                'title': {'text': 'Words', 'font': {'color': '#f8fafc', 'size': 16}}
+            },
+            xaxis={
+                'tickfont': {'color': '#f8fafc', 'size': 14},
+                'title': {'text': 'Frequency', 'font': {'color': '#f8fafc', 'size': 16}}
+            },
+            height=500,
+            title_x=0.5,
+            font=dict(color='#f8fafc'),
+            margin=dict(l=120, r=50, t=80, b=50)
+        )
 
-        # Use safe chart container
-        def create_bar_chart():
-            st.plotly_chart(fig, use_container_width=True)
+        # Update traces for better visibility
+        fig.update_traces(
+            textfont_color='#f8fafc',
+            textposition='outside',
+            marker_line_color='#22c55e',
+            marker_line_width=1
+        )
 
-        create_safe_chart_container(create_bar_chart, is_light_mode)
+        st.plotly_chart(fig, use_container_width=True)
 
-        # Word frequency bubble chart
+        # Word frequency bubble chart with improved text visibility
         st.markdown("##### Word Frequency Bubble Chart")
 
         # Create positions for bubbles
@@ -348,16 +271,11 @@ def generate_word_frequency_chart(text):
         # Create bubble chart
         fig2 = go.Figure()
 
-        # Use appropriate colors based on theme
-        if is_light_mode:
-            bubble_colors = [f'rgba({34 + min(i * 15, 100)}, {197 - min(i * 10, 80)}, {94 + min(i * 5, 50)}, 0.8)'
-                             for i in range(len(frequencies))]
-            line_color = 'rgba(22, 163, 74, 0.8)'
-            text_color = '#166534'
-        else:
-            bubble_colors = list(frequencies)
-            line_color = 'rgba(255,255,255,0.8)'
-            text_color = 'white'
+        # Improved colors and text visibility
+        bubble_colors = [f'rgba({34 + min(i * 15, 100)}, {197 - min(i * 10, 80)}, {94 + min(i * 5, 50)}, 0.9)'
+                         for i in range(len(frequencies))]
+        line_color = '#22c55e'
+        text_color = '#ffffff'  # Changed to white for better visibility
 
         fig2.add_trace(go.Scatter(
             x=positions_x,
@@ -366,36 +284,31 @@ def generate_word_frequency_chart(text):
             marker=dict(
                 size=[freq * 6 + 25 for freq in frequencies],
                 color=bubble_colors,
-                colorscale='Greens' if is_light_mode else 'Viridis',
-                showscale=not is_light_mode,
-                colorbar=dict(title="Frequency") if not is_light_mode else None,
-                line=dict(width=2, color=line_color),
+                line=dict(width=3, color=line_color),
                 opacity=0.8
             ),
             text=list(words_list),
             textposition="middle center",
             textfont=dict(
-                size=[min(18, 10 + freq * 2) for freq in frequencies],
-                color=text_color
+                size=[min(20, 12 + freq * 2) for freq in frequencies],
+                color=text_color,
+                family="Arial Black"  # Bold font for better visibility
             ),
-            hovertemplate="<b>%{text}</b><br>Frequency: %{marker.color}<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Frequency: %{customdata}<extra></extra>",
+            customdata=frequencies,
             showlegend=False
         ))
 
-        # Apply theme to bubble chart
-        if is_light_mode:
-            theme_config = get_plotly_light_theme()
-            fig2.update_layout(**theme_config['layout'])
-            fig2.update_layout(title_font_color='#059669')
-        else:
-            theme_config = get_plotly_dark_theme()
-            fig2.update_layout(**theme_config['layout'])
-            fig2.update_layout(title_font_color='white')
-
+        # Improved layout for bubble chart
         fig2.update_layout(
+            paper_bgcolor='rgba(15, 27, 15, 0.9)',
+            plot_bgcolor='rgba(15, 27, 15, 0.9)',
             title="Word Frequency Bubble Visualization",
-            title_font_size=18,
+            title_font_size=20,
             title_font_weight='bold',
+            title_font_color='#22c55e',
+            title_x=0.5,
+            font=dict(color='#f8fafc'),
             xaxis=dict(
                 showgrid=False,
                 showticklabels=False,
@@ -409,14 +322,11 @@ def generate_word_frequency_chart(text):
                 range=[-1, grid_size]
             ),
             height=500,
-            showlegend=False
+            showlegend=False,
+            margin=dict(l=50, r=50, t=80, b=50)
         )
 
-        # Use safe chart container for bubble chart
-        def create_bubble_chart():
-            st.plotly_chart(fig2, use_container_width=True)
-
-        create_safe_chart_container(create_bubble_chart, is_light_mode)
+        st.plotly_chart(fig2, use_container_width=True)
 
     except Exception as e:
         st.error(f"Visualization error: {e}")
@@ -424,11 +334,7 @@ def generate_word_frequency_chart(text):
 
 
 def load_css():
-    """Load custom CSS for the professional landing page"""
-    # Initialize cross-browser support if available
-    if CSS_HANDLER_AVAILABLE:
-        initialize_cross_browser_support()
-
+    """Load custom CSS for light mode with enhanced nebula effect"""
     css = """
     <style>
         /* Import Google Fonts */
@@ -453,53 +359,134 @@ def load_css():
             max-width: 100% !important;
         }
 
+        /* Enhanced nebula background with green theme */
         .stApp {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
-            background-size: 400% 400%;
-            animation: gradient-flow 20s ease infinite;
-            min-height: 100vh;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0f0c 0%, #1a2e1a 25%, #0f1b0f 50%, #1a2e1a 75%, #0a0f0c 100%) !important;
+            background-size: 400% 400% !important;
+            animation: cosmic-drift 25s ease infinite;
+            min-height: 100vh !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             position: relative;
             overflow-x: hidden;
+            color: #e2e8f0 !important;
         }
 
-        @keyframes gradient-flow {
+        /* Force override system colors */
+        .stApp, .stApp * {
+            color-scheme: dark !important;
+        }
+
+        @keyframes cosmic-drift {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            25% { background-position: 100% 25%; }
+            50% { background-position: 50% 100%; }
+            75% { background-position: 25% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Enhanced visual effects */
+        /* Multi-layered nebula effects */
         .stApp::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                /* Core nebula */
+                radial-gradient(ellipse 1200px 800px at 20% 30%, 
+                    rgba(34, 197, 94, 0.4) 0%, 
+                    rgba(16, 185, 129, 0.3) 20%, 
+                    rgba(34, 197, 94, 0.2) 40%, 
+                    rgba(22, 163, 74, 0.15) 60%, 
+                    rgba(5, 150, 105, 0.1) 80%, 
+                    transparent 100%),
+                /* Secondary nebula */
+                radial-gradient(ellipse 1000px 1200px at 80% 70%, 
+                    rgba(22, 163, 74, 0.35) 0%, 
+                    rgba(34, 197, 94, 0.25) 25%, 
+                    rgba(16, 185, 129, 0.2) 50%, 
+                    rgba(5, 150, 105, 0.12) 75%, 
+                    transparent 90%),
+                /* Accent nebula */
+                radial-gradient(ellipse 800px 600px at 50% 20%, 
+                    rgba(16, 185, 129, 0.3) 0%, 
+                    rgba(34, 197, 94, 0.2) 30%, 
+                    rgba(22, 163, 74, 0.15) 60%, 
+                    transparent 85%),
+                /* Distant nebula */
+                radial-gradient(ellipse 1500px 900px at 70% 90%, 
+                    rgba(5, 150, 105, 0.2) 0%, 
+                    rgba(34, 197, 94, 0.15) 35%, 
+                    rgba(16, 185, 129, 0.1) 70%, 
+                    transparent 95%);
+            animation: nebula-flow 35s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(1px);
+        }
+
+        @keyframes nebula-flow {
+            0%, 100% { 
+                transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+                opacity: 0.8;
+            }
+            25% { 
+                transform: translateX(-30px) translateY(-40px) rotate(-2deg) scale(1.05);
+                opacity: 0.9;
+            }
+            50% { 
+                transform: translateX(25px) translateY(-20px) rotate(1deg) scale(0.95);
+                opacity: 0.85;
+            }
+            75% { 
+                transform: translateX(-15px) translateY(30px) rotate(-1deg) scale(1.02);
+                opacity: 0.88;
+            }
+        }
+
+        /* Additional nebula layer for depth */
+        .stApp::after {
             content: '';
             position: fixed;
             top: 0;
             left: 0;
-            width: 120%;
-            height: 120%;
-            background-image: 
-                radial-gradient(ellipse 900px 500px at 15% 20%, rgba(6, 182, 212, 0.4) 0%, rgba(14, 165, 233, 0.3) 30%, rgba(34, 197, 94, 0.2) 50%, transparent 80%),
-                radial-gradient(ellipse 700px 900px at 85% 80%, rgba(16, 185, 129, 0.35) 0%, rgba(6, 182, 212, 0.25) 25%, rgba(59, 130, 246, 0.15) 60%, transparent 85%);
-            animation: nebula-drift 30s ease-in-out infinite;
+            width: 100%;
+            height: 100%;
+            background-image:
+                /* Scattered stars/particles */
+                radial-gradient(circle at 15% 25%, rgba(34, 197, 94, 0.8) 0px, transparent 2px),
+                radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.6) 0px, transparent 1px),
+                radial-gradient(circle at 35% 75%, rgba(22, 163, 74, 0.7) 0px, transparent 1.5px),
+                radial-gradient(circle at 75% 85%, rgba(5, 150, 105, 0.5) 0px, transparent 1px),
+                radial-gradient(circle at 55% 35%, rgba(34, 197, 94, 0.4) 0px, transparent 1px),
+                radial-gradient(circle at 25% 65%, rgba(16, 185, 129, 0.6) 0px, transparent 1px),
+                /* Subtle dust clouds */
+                radial-gradient(ellipse 400px 200px at 60% 40%, rgba(34, 197, 94, 0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 300px 400px at 30% 80%, rgba(22, 163, 74, 0.06) 0%, transparent 80%);
+            animation: stellar-twinkle 20s linear infinite;
             pointer-events: none;
-            z-index: 0;
+            z-index: 1;
         }
 
-        @keyframes nebula-drift {
-            0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); opacity: 0.8; }
-            50% { transform: translateX(-15px) translateY(-25px) rotate(-1deg); opacity: 0.75; }
+        @keyframes stellar-twinkle {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
 
-        /* TOP NAVBAR STYLES */
+        /* TOP NAVBAR STYLES with nebula integration */
         .top-navbar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.85) 100%);
+            background: linear-gradient(135deg, 
+                rgba(10, 15, 12, 0.95) 0%, 
+                rgba(26, 46, 26, 0.9) 50%, 
+                rgba(15, 27, 15, 0.85) 100%) !important;
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(6, 182, 212, 0.3);
-            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 4px 25px rgba(34, 197, 94, 0.2);
             z-index: 1000;
             height: 80px;
         }
@@ -515,25 +502,35 @@ def load_css():
         }
 
         .nav-brand {
-            font-size: 1.8rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #06b6d4, #10b981, #14b8a6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 1.8rem !important;
+            font-weight: 900 !important;
+            background: linear-gradient(135deg, #22c55e, #16a34a, #059669) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
             display: flex;
             align-items: center;
             gap: 0.7rem;
+            text-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+            color: #22c55e !important;
         }
 
         .nav-brand-icon {
-            font-size: 2rem;
-            animation: logo-glow 3s ease-in-out infinite;
+            font-size: 2rem !important;
+            animation: logo-nebula-glow 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.6));
+            color: #22c55e !important;
         }
 
-        @keyframes logo-glow {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        @keyframes logo-nebula-glow {
+            0%, 100% { 
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.6));
+            }
+            50% { 
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 20px rgba(34, 197, 94, 0.8));
+            }
         }
 
         /* Add top margin to main content */
@@ -541,7 +538,7 @@ def load_css():
             margin-top: 80px;
         }
 
-        /* Hero section */
+        /* Hero section with nebula enhancement */
         .hero-section {
             text-align: center;
             padding: 4rem 0;
@@ -552,61 +549,244 @@ def load_css():
 
         .hero-badge {
             display: inline-block;
-            padding: 0.75rem 2rem;
-            background: rgba(6, 182, 212, 0.2);
-            color: #06b6d4;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            padding: 0.75rem 2rem !important;
+            background: rgba(34, 197, 94, 0.15) !important;
+            color: #22c55e !important;
+            border-radius: 50px !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
             margin-bottom: 2rem;
-            border: 1px solid rgba(6, 182, 212, 0.4);
-            animation: pulse-glow 4s ease-in-out infinite;
+            border: 1px solid rgba(34, 197, 94, 0.4) !important;
+            animation: nebula-pulse-glow 4s ease-in-out infinite;
+            backdrop-filter: blur(10px);
         }
 
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.4); transform: scale(1); }
-            50% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.6); transform: scale(1.05); }
+        @keyframes nebula-pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+                transform: scale(1);
+                border-color: rgba(34, 197, 94, 0.4);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(34, 197, 94, 0.7);
+                transform: scale(1.05);
+                border-color: rgba(34, 197, 94, 0.6);
+            }
         }
 
         .main-title {
-            font-size: clamp(3rem, 8vw, 5.5rem);
-            font-weight: 900;
-            color: white;
-            line-height: 1.1;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
+            font-size: clamp(3rem, 8vw, 5.5rem) !important;
+            font-weight: 900 !important;
+            color: #f8fafc !important;
+            line-height: 1.1 !important;
+            margin-bottom: 2rem !important;
+            letter-spacing: -0.02em !important;
+            text-shadow: 0 0 30px rgba(34, 197, 94, 0.3) !important;
         }
 
         .subtitle {
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
-            color: white;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
-            line-height: 1.4;
+            font-size: clamp(1.2rem, 3vw, 1.8rem) !important;
+            color: #e2e8f0 !important;
+            font-weight: 500 !important;
+            margin-bottom: 1.5rem !important;
+            line-height: 1.4 !important;
+            text-shadow: 0 0 15px rgba(34, 197, 94, 0.2) !important;
         }
 
         .description {
-            font-size: clamp(1rem, 2.5vw, 1.3rem);
-            color: white;
-            margin-bottom: 3rem;
-            line-height: 1.6;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+            font-size: clamp(1rem, 2.5vw, 1.3rem) !important;
+            color: #cbd5e1 !important;
+            margin-bottom: 3rem !important;
+            line-height: 1.6 !important;
+            max-width: 800px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
         }
 
-        /* Make all text white */
-        h1, h2, h3, h4, h5, h6, p, div, span, li {
+        /* UNIVERSAL FILE UPLOADER STYLING - WORKS ACROSS ALL BROWSERS AND THEMES */
+
+        /* Target all possible file uploader elements */
+        .stFileUploader,
+        .stFileUploader > div,
+        .stFileUploader > div > div,
+        .stFileUploader section,
+        .stFileUploader section > div,
+        div[data-testid="stFileUploader"],
+        div[data-testid="stFileUploader"] > div,
+        div[data-testid="stFileUploader"] section,
+        div[data-testid="stFileUploaderDropzone"],
+        div[data-testid="stFileUploaderDropzoneInstructions"],
+        [data-testid*="fileUploader"],
+        [data-testid*="FileUploader"] {
+            background: rgba(15, 27, 15, 0.95) !important;
+            background-color: rgba(15, 27, 15, 0.95) !important;
+            border: 2px dashed #22c55e !important;
+            border-color: #22c55e !important;
+            border-radius: 16px !important;
+            padding: 2rem !important;
+            text-align: center !important;
+            transition: all 0.3s ease !important;
+            backdrop-filter: blur(10px) !important;
+            color: #e2e8f0 !important;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        /* Force text color for all file uploader text elements */
+        .stFileUploader label,
+        .stFileUploader p,
+        .stFileUploader span,
+        .stFileUploader div,
+        .stFileUploader small,
+        div[data-testid="stFileUploader"] label,
+        div[data-testid="stFileUploader"] p,
+        div[data-testid="stFileUploader"] span,
+        div[data-testid="stFileUploader"] div,
+        div[data-testid="stFileUploader"] small,
+        div[data-testid="stFileUploaderDropzoneInstructions"] *,
+        [data-testid*="fileUploader"] *,
+        [data-testid*="FileUploader"] * {
+            color: #e2e8f0 !important;
+            font-weight: 500 !important;
+            font-size: 1.1rem !important;
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.3) !important;
+        }
+
+        /* Specific targeting for drag and drop text */
+        .stFileUploader [class*="drag"],
+        .stFileUploader [class*="drop"],
+        div[data-testid="stFileUploader"] [class*="drag"],
+        div[data-testid="stFileUploader"] [class*="drop"],
+        div[data-testid="stFileUploaderDropzoneInstructions"],
+        div[data-testid="stFileUploaderDropzoneInstructions"] > *,
+        [data-testid*="fileUploader"] [class*="drag"],
+        [data-testid*="fileUploader"] [class*="drop"] {
+            color: #e2e8f0 !important;
+            background: transparent !important;
+            font-weight: 600 !important;
+            font-size: 1.2rem !important;
+            text-shadow: 0 0 15px rgba(34, 197, 94, 0.4) !important;
+        }
+
+        /* File uploader button styling */
+        .stFileUploader button,
+        .stFileUploader input[type="file"],
+        div[data-testid="stFileUploader"] button,
+        div[data-testid="stFileUploader"] input[type="file"],
+        [data-testid*="fileUploader"] button,
+        [data-testid*="FileUploader"] button {
+            background: linear-gradient(135deg, #059669, #16a34a) !important;
+            background-color: #059669 !important;
             color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
         }
 
-        .stMarkdown, .stMarkdown * {
-            color: white !important;
+        .stFileUploader button:hover,
+        div[data-testid="stFileUploader"] button:hover,
+        [data-testid*="fileUploader"] button:hover {
+            background: linear-gradient(135deg, #047857, #15803d) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4) !important;
         }
 
-        /* Enhanced button styling */
+        /* File uploader hover effects */
+        .stFileUploader:hover,
+        div[data-testid="stFileUploader"]:hover,
+        [data-testid*="fileUploader"]:hover {
+            background: rgba(15, 27, 15, 0.98) !important;
+            border-color: #16a34a !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4) !important;
+        }
+
+        /* Override any system/browser default styling */
+        .stFileUploader *,
+        div[data-testid="stFileUploader"] *,
+        [data-testid*="fileUploader"] *,
+        [data-testid*="FileUploader"] * {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+        }
+
+        /* Force override for webkit browsers */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            .stFileUploader,
+            div[data-testid="stFileUploader"],
+            [data-testid*="fileUploader"] {
+                background: rgba(15, 27, 15, 0.95) !important;
+                border: 2px dashed #22c55e !important;
+                color: #e2e8f0 !important;
+            }
+        }
+
+        /* Firefox specific overrides */
+        @-moz-document url-prefix() {
+            .stFileUploader,
+            div[data-testid="stFileUploader"],
+            [data-testid*="fileUploader"] {
+                background: rgba(15, 27, 15, 0.95) !important;
+                border: 2px dashed #22c55e !important;
+                color: #e2e8f0 !important;
+            }
+        }
+
+        /* Edge specific overrides */
+        @supports (-ms-ime-align: auto) {
+            .stFileUploader,
+            div[data-testid="stFileUploader"],
+            [data-testid*="fileUploader"] {
+                background: rgba(15, 27, 15, 0.95) !important;
+                border: 2px dashed #22c55e !important;
+                color: #e2e8f0 !important;
+            }
+        }
+
+        /* Force dark color scheme for file uploader area */
+        .stFileUploader,
+        div[data-testid="stFileUploader"],
+        [data-testid*="fileUploader"] {
+            color-scheme: dark !important;
+            -webkit-color-scheme: dark !important;
+        }
+
+        /* Text colors for dark nebula theme - FORCED OVERRIDES */
+        h1, h1 *, 
+        h2, h2 *, 
+        h3, h3 *, 
+        h4, h4 *, 
+        h5, h5 *, 
+        h6, h6 * {
+            color: #f8fafc !important;
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.2) !important;
+        }
+
+        p, p *,
+        div, 
+        span, span *,
+        li, li *,
+        label, label *,
+        small, small * {
+            color: #e2e8f0 !important;
+        }
+
+        .stMarkdown, 
+        .stMarkdown *,
+        [data-testid="stMarkdownContainer"],
+        [data-testid="stMarkdownContainer"] * {
+            color: #e2e8f0 !important;
+        }
+
+        /* Enhanced button styling with nebula glow */
         .stButton > button {
-            background: linear-gradient(135deg, #06b6d4 0%, #10b981 50%, #14b8a6 100%) !important;
+            background: linear-gradient(135deg, #059669 0%, #16a34a 50%, #22c55e 100%) !important;
             border: none !important;
             color: white !important;
             padding: 1.25rem 3rem !important;
@@ -615,83 +795,229 @@ def load_css():
             font-weight: 600 !important;
             cursor: pointer !important;
             transition: all 0.4s ease !important;
-            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.5) !important;
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.4) !important;
             min-width: 250px !important;
             height: 60px !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .stButton > button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .stButton > button:hover::before {
+            left: 100%;
         }
 
         .stButton > button:hover {
             transform: translateY(-3px) scale(1.05) !important;
-            box-shadow: 0 15px 50px rgba(6, 182, 212, 0.7) !important;
+            box-shadow: 0 15px 60px rgba(34, 197, 94, 0.6) !important;
         }
 
-        /* File uploader styling */
-        .stFileUploader > div > div {
-            background: rgba(255, 255, 255, 0.95) !important;
-            border: 2px dashed #06b6d4 !important;
-            border-radius: 16px !important;
-            padding: 2rem !important;
-            text-align: center !important;
-            transition: all 0.3s ease !important;
-        }
-
-        .stFileUploader > div > div:hover {
-            background: rgba(255, 255, 255, 1) !important;
-            border-color: #10b981 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3) !important;
-        }
-
-        /* Cards and feature styling */
+        /* Cards and feature styling with nebula integration */
         .feature-card {
-            background: rgba(6, 182, 212, 0.05);
+            background: rgba(15, 27, 15, 0.8) !important;
             backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 2rem;
-            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 20px !important;
+            padding: 2rem !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
             transition: all 0.4s ease;
             text-align: center;
             height: 100%;
             position: relative;
             z-index: 2;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
         }
 
         .feature-card:hover {
-            background: rgba(6, 182, 212, 0.1);
+            background: rgba(15, 27, 15, 0.9) !important;
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.3);
-            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.3) !important;
+            border-color: rgba(34, 197, 94, 0.5) !important;
         }
 
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
+            font-size: 3rem !important;
+            margin-bottom: 1rem !important;
+            display: block !important;
+            filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.4));
+            color: #22c55e !important;
         }
 
         .feature-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #06b6d4;
-            margin-bottom: 1rem;
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            color: #22c55e !important;
+            margin-bottom: 1rem !important;
+            text-shadow: 0 0 10px rgba(34, 197, 94, 0.3) !important;
         }
 
         .feature-text {
-            color: white;
-            line-height: 1.6;
+            color: #cbd5e1 !important;
+            line-height: 1.6 !important;
         }
 
         /* LinkedIn link styling */
         .linkedin-link {
-            color: #06b6d4 !important;
+            color: #22c55e !important;
             text-decoration: none !important;
             font-weight: 500 !important;
             transition: all 0.3s ease !important;
         }
 
         .linkedin-link:hover {
-            color: #10b981 !important;
+            color: #16a34a !important;
             text-decoration: underline !important;
+            text-shadow: 0 0 5px rgba(34, 197, 94, 0.5) !important;
+        }
+
+        /* Text area styling for nebula theme */
+        .stTextArea textarea {
+            background-color: rgba(15, 27, 15, 0.8) !important;
+            border: 2px solid rgba(34, 197, 94, 0.3) !important;
+            border-radius: 8px !important;
+            color: #e2e8f0 !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        .stTextArea textarea:focus {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.3) !important;
+        }
+
+        /* Metrics styling with nebula glow */
+        .metric-container {
+            background: rgba(15, 27, 15, 0.8) !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            text-align: center !important;
+            transition: all 0.3s ease !important;
+            backdrop-filter: blur(10px) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .metric-container:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3) !important;
+            border-color: rgba(34, 197, 94, 0.5) !important;
+        }
+
+        /* Summary box styling with nebula theme */
+        .summary-box {
+            background: rgba(15, 27, 15, 0.9) !important;
+            border: 2px solid rgba(34, 197, 94, 0.4) !important;
+            border-radius: 16px !important;
+            padding: 2rem !important;
+            margin: 1rem 0 !important;
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.2) !important;
+            backdrop-filter: blur(15px) !important;
+        }
+
+        /* Selectbox and radio button styling */
+        .stSelectbox > div > div {
+            background-color: rgba(15, 27, 15, 0.8) !important;
+            border-color: rgba(34, 197, 94, 0.3) !important;
+            color: #e2e8f0 !important;
+        }
+
+        .stRadio > div {
+            background-color: rgba(15, 27, 15, 0.3) !important;
+            border-radius: 8px !important;
+            padding: 0.5rem !important;
+        }
+
+        .stRadio label {
+            color: #e2e8f0 !important;
+        }
+
+        /* Checkbox styling */
+        .stCheckbox > label {
+            color: #e2e8f0 !important;
+        }
+
+        /* Info/warning/error boxes with nebula theme */
+        .stAlert {
+            background-color: rgba(15, 27, 15, 0.8) !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        /* Expander styling */
+        .streamlit-expanderHeader {
+            background-color: rgba(15, 27, 15, 0.8) !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
+            color: #e2e8f0 !important;
+        }
+
+        .streamlit-expanderContent {
+            background-color: rgba(15, 27, 15, 0.9) !important;
+            border: 1px solid rgba(34, 197, 94, 0.2) !important;
+        }
+
+        /* Sidebar styling */
+        .css-1d391kg {
+            background-color: rgba(10, 15, 12, 0.95) !important;
+            border-right: 1px solid rgba(34, 197, 94, 0.3) !important;
+        }
+
+        /* Tabs styling */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: rgba(15, 27, 15, 0.8) !important;
+            border-radius: 8px !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+            color: #22c55e !important;
+        }
+
+        /* Progress bar styling */
+        .stProgress .st-bo {
+            background-color: rgba(34, 197, 94, 0.3) !important;
+        }
+
+        /* Spinner styling */
+        .stSpinner > div {
+            border-top-color: #22c55e !important;
+        }
+
+        /* Success/error message styling */
+        .stSuccess {
+            background-color: rgba(34, 197, 94, 0.1) !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
+            color: #22c55e !important;
+        }
+
+        .stError {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid rgba(239, 68, 68, 0.3) !important;
+            color: #ef4444 !important;
+        }
+
+        .stWarning {
+            background-color: rgba(245, 158, 11, 0.1) !important;
+            border: 1px solid rgba(245, 158, 11, 0.3) !important;
+            color: #f59e0b !important;
+        }
+
+        .stInfo {
+            background-color: rgba(34, 197, 94, 0.1) !important;
+            border: 1px solid rgba(34, 197, 94, 0.3) !important;
+            color: #22c55e !important;
         }
 
         /* Responsive design */
@@ -701,12 +1027,151 @@ def load_css():
                 padding-right: 1rem !important;
             }
             .nav-brand {
-                font-size: 1.6rem;
+                font-size: 1.6rem !important;
             }
             .stButton > button {
                 min-width: 200px !important;
                 padding: 1rem 2rem !important;
             }
+
+            /* Mobile nebula adjustments */
+            .stApp::before {
+                background-size: 150% 150%;
+            }
+
+            /* Mobile file uploader */
+            .stFileUploader,
+            div[data-testid="stFileUploader"],
+            [data-testid*="fileUploader"] {
+                padding: 1.5rem !important;
+                font-size: 0.9rem !important;
+            }
+        }
+
+        /* Floating particles animation */
+        @keyframes float-particles {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px);
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-20px) translateX(10px);
+                opacity: 1;
+            }
+        }
+
+        /* Additional nebula enhancement for landing page */
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(ellipse 600px 400px at 50% 50%, 
+                rgba(34, 197, 94, 0.1) 0%, 
+                rgba(22, 163, 74, 0.05) 50%, 
+                transparent 80%);
+            animation: hero-nebula-pulse 8s ease-in-out infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes hero-nebula-pulse {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Enhanced glow effects for interactive elements */
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(45deg, 
+                rgba(34, 197, 94, 0.3), 
+                rgba(22, 163, 74, 0.2), 
+                rgba(16, 185, 129, 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Additional file uploader enhancements for better cross-browser compatibility */
+        .stFileUploader::before,
+        div[data-testid="stFileUploader"]::before,
+        [data-testid*="fileUploader"]::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 27, 15, 0.95) !important;
+            border-radius: 16px !important;
+            z-index: -1;
+        }
+
+        /* Force text visibility in file uploader regardless of browser theme */
+        .stFileUploader *::selection,
+        div[data-testid="stFileUploader"] *::selection,
+        [data-testid*="fileUploader"] *::selection {
+            background: rgba(34, 197, 94, 0.3) !important;
+            color: #f8fafc !important;
+        }
+
+        /* Webkit specific file input styling */
+        .stFileUploader input[type="file"]::-webkit-file-upload-button,
+        div[data-testid="stFileUploader"] input[type="file"]::-webkit-file-upload-button,
+        [data-testid*="fileUploader"] input[type="file"]::-webkit-file-upload-button {
+            background: linear-gradient(135deg, #059669, #16a34a) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 8px !important;
+            padding: 0.75rem 1.5rem !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+        }
+
+        /* Override any potential theme conflicts */
+        html[data-theme="light"] .stFileUploader,
+        html[data-theme="light"] div[data-testid="stFileUploader"],
+        html[data-theme="dark"] .stFileUploader,
+        html[data-theme="dark"] div[data-testid="stFileUploader"],
+        [data-color-mode="light"] .stFileUploader,
+        [data-color-mode="light"] div[data-testid="stFileUploader"],
+        [data-color-mode="dark"] .stFileUploader,
+        [data-color-mode="dark"] div[data-testid="stFileUploader"] {
+            background: rgba(15, 27, 15, 0.95) !important;
+            border: 2px dashed #22c55e !important;
+            color: #e2e8f0 !important;
+        }
+
+        html[data-theme="light"] .stFileUploader *,
+        html[data-theme="light"] div[data-testid="stFileUploader"] *,
+        html[data-theme="dark"] .stFileUploader *,
+        html[data-theme="dark"] div[data-testid="stFileUploader"] *,
+        [data-color-mode="light"] .stFileUploader *,
+        [data-color-mode="light"] div[data-testid="stFileUploader"] *,
+        [data-color-mode="dark"] .stFileUploader *,
+        [data-color-mode="dark"] div[data-testid="stFileUploader"] * {
+            color: #e2e8f0 !important;
         }
     </style>
     """
@@ -714,13 +1179,13 @@ def load_css():
 
 
 def render_streamlit_navbar():
-    """Render navbar with just the brand name"""
+    """Render navbar with enhanced nebula styling"""
     st.markdown("""
     <div class="top-navbar">
         <div class="navbar-content">
             <div class="nav-brand">
                 <span class="nav-brand-icon">🧠</span>
-                <span> 🧠 Smart Research Summarizer</span>
+                <span>Smart Research Summarizer</span>
             </div>
         </div>
     </div>
@@ -728,7 +1193,7 @@ def render_streamlit_navbar():
 
 
 def render_landing_page():
-    """Render the landing page using pure Streamlit components"""
+    """Render the landing page with enhanced nebula effects"""
 
     # Show status messages only for critical errors
     if not PDF_AVAILABLE:
@@ -743,14 +1208,14 @@ def render_landing_page():
         st.warning("⚠️ Plotly not available. Install for interactive visualizations.")
         st.code("pip install plotly", language="bash")
 
-    # Hero Section
+    # Hero Section with enhanced nebula effects
     st.markdown("""
     <div class="hero-section">
-        <div class="hero-badge"> AI-Powered Research Analysis with Interactive Visualizations</div>
+        <div class="hero-badge">AI-Powered Research Analysis with Interactive Visualizations</div>
         <h1 class="main-title">Smart Research Summarizer</h1>
         <p class="subtitle">Transform PDFs into intelligent summaries with stunning interactive charts</p>
         <div style="text-align: center; max-width: 800px; margin: 0 auto;">
-            <p class="description">Upload any PDF research paper and get comprehensive summaries with beautiful interactive visualizations including word frequency charts, summary statistics, and data analytics.</p>
+            <p class="description">Upload any PDF research paper and get comprehensive summaries with beautiful interactive visualizations including word frequency charts, summary statistics, and data analytics powered by advanced AI models.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -760,8 +1225,6 @@ def render_landing_page():
     with col2:
         if st.button("Start Analyzing", key="main_cta", use_container_width=True):
             st.session_state.show_app = True
-            # Set dark mode as default when entering the app
-            st.session_state.light_mode = False  # Ensures dark mode loads first
             st.rerun()
 
     st.markdown("<div style='height: 3rem;'></div>", unsafe_allow_html=True)
@@ -776,7 +1239,7 @@ def render_landing_page():
         <div class="feature-card">
             <div class="feature-icon">📊</div>
             <h3 class="feature-title">Interactive Visualizations</h3>
-            <p class="feature-text">Beautiful word frequency charts and summary analytics with hover effects, zoom, and export capabilities.</p>
+            <p class="feature-text">Beautiful word frequency charts and summary analytics with hover effects, zoom, and export capabilities powered by advanced data visualization.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -784,7 +1247,7 @@ def render_landing_page():
         <div class="feature-card">
             <div class="feature-icon">🔍</div>
             <h3 class="feature-title">AI-Powered Analysis</h3>
-            <p class="feature-text">Advanced AI models extract key insights and findings from complex academic papers with precision.</p>
+            <p class="feature-text">Advanced AI models extract key insights and findings from complex academic papers with precision using state-of-the-art NLP techniques.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -793,7 +1256,7 @@ def render_landing_page():
         <div class="feature-card">
             <div class="feature-icon">📈</div>
             <h3 class="feature-title">Smart Summarization</h3>
-            <p class="feature-text">Choose from short, medium, or long summaries tailored to your needs with advanced text processing.</p>
+            <p class="feature-text">Choose from short, medium, or long summaries tailored to your needs with advanced text processing and intelligent content extraction.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -801,19 +1264,40 @@ def render_landing_page():
         <div class="feature-card">
             <div class="feature-icon">💾</div>
             <h3 class="feature-title">Export & Download</h3>
-            <p class="feature-text">Download complete analysis of generated reports with metadata, statistics, and visualizations included.</p>
+            <p class="feature-text">Download complete analysis reports with metadata, statistics, and visualizations included for easy sharing and reference.</p>
         </div>
         """, unsafe_allow_html=True)
 
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: white;">
+    <div style="text-align: center; padding: 2rem; color: #cbd5e1;">
         <p><strong>© 2025 Ritika Yadav Smart Research Summarizer. All rights reserved.</strong></p>
         <p style="margin: 1rem 0; font-size: 0.9rem;">Empowering research through AI and interactive visualization</p>
         <p style="margin: 0.5rem 0; font-size: 0.9rem;">
             <a href="https://www.linkedin.com/in/ritika-yadav-b27344286/" target="_blank" class="linkedin-link">Connect on LinkedIn</a>
         </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def create_metrics(value, label):
+    """Create styled metrics for nebula theme"""
+    st.markdown(f"""
+    <div class="metric-container">
+        <div style="font-size: 2rem; font-weight: bold; color: #22c55e; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);">{value}</div>
+        <div style="font-size: 0.9rem; color: #cbd5e1;">{label}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def create_summary_box(summary_text):
+    """Create styled summary box for nebula theme"""
+    st.markdown(f"""
+    <div class="summary-box">
+        <div style="color: #e2e8f0; line-height: 1.6; font-size: 1.1rem;">
+            {summary_text}
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -830,32 +1314,15 @@ def run_summarizer_app():
             st.rerun()
         return
 
-    # Ensure dark mode is default when app loads
-    if "light_mode" not in st.session_state:
-        st.session_state.light_mode = False  # Dark mode default
-
-    # Theme handling - Dark mode is now default
-    if THEME_AVAILABLE:
-        create_theme_toggle()
-        apply_theme_styles()
-    else:
-        col1, col2 = st.columns([9, 1])
-        with col2:
-            st.markdown("### ")
-            if st.toggle("☀️", value=st.session_state.light_mode, help="Toggle Light/Dark Mode"):
-                st.session_state.light_mode = True
-            else:
-                st.session_state.light_mode = False
-
     # Back button
     if st.button("← Back to Landing Page", key="back_to_landing"):
         st.session_state.show_app = False
         st.rerun()
 
     # App Title
-    st.title("🧠 Smart Research Summarizer")
+    st.title(" Smart Research Summarizer")
 
-    # Simple status - removed all the extra text
+    # Simple status
     st.markdown("### Upload a PDF research paper for AI analysis")
 
     # Layout
@@ -890,49 +1357,20 @@ def run_summarizer_app():
 
             with st.expander("Click to view extracted text", expanded=False):
                 preview_text = full_text[:2000] + "..." if len(full_text) > 2000 else full_text
-
-                # Apply appropriate styling based on theme for text area
-                is_light_mode = st.session_state.get("light_mode", False)
-                if not is_light_mode:  # Dark mode
-                    st.markdown("""
-                    <style>
-                    .stTextArea textarea {
-                        background: rgba(30, 41, 59, 0.8) !important;
-                        border: 1px solid rgba(6, 182, 212, 0.3) !important;
-                        border-radius: 10px !important;
-                        color: white !important;
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown("""
-                    <style>
-                    .stTextArea textarea {
-                        background-color: #ffffff !important;
-                        border: 2px solid #e5e7eb !important;
-                        border-radius: 8px !important;
-                        color: #111827 !important;
-                    }
-                    </style>
-                    """, unsafe_allow_html=True)
-
                 st.text_area("", value=preview_text, height=200, disabled=True)
 
-            # Document stats with cross-browser safe styling
+            # Document stats
             word_count = len(full_text.split())
             char_count = len(full_text)
             estimated_read_time = max(1, round(word_count / 250))
 
-            # Use cross-browser safe metrics
-            is_light_mode = st.session_state.get("light_mode", False)
-
             col1, col2, col3 = st.columns(3)
             with col1:
-                create_safe_metrics(f"{word_count:,}", "Word Count", is_light_mode)
+                create_metrics(f"{word_count:,}", "Word Count")
             with col2:
-                create_safe_metrics(f"{char_count:,}", "Characters", is_light_mode)
+                create_metrics(f"{char_count:,}", "Characters")
             with col3:
-                create_safe_metrics(f"{estimated_read_time}", "Est. Read Time (min)", is_light_mode)
+                create_metrics(f"{estimated_read_time}", "Est. Read Time (min)")
 
             # Generate button
             col1, col2, col3 = st.columns([1, 2, 1])
@@ -966,27 +1404,26 @@ def run_summarizer_app():
 
                             st.balloons()
 
-                            success_msg = f" {summary_length} summary generated!"
+                            success_msg = f"✅ {summary_length} summary generated!"
                             if show_graphs:
                                 success_msg += " Visualizations created!"
                             st.success(success_msg)
 
-                            # Summary stats with cross-browser safe styling
+                            # Summary stats
                             summary_word_count = len(summary.split())
                             compression_ratio = round((1 - summary_word_count / word_count) * 100)
 
-                            # Use cross-browser safe summary metrics
                             col1, col2, col3 = st.columns(3)
                             with col1:
-                                create_safe_metrics(f"{summary_word_count}", "Summary Words", is_light_mode)
+                                create_metrics(f"{summary_word_count}", "Summary Words")
                             with col2:
-                                create_safe_metrics(f"{compression_ratio}%", "Compression", is_light_mode)
+                                create_metrics(f"{compression_ratio}%", "Compression")
                             with col3:
-                                create_safe_metrics(f"{summary_length}", "Summary Type", is_light_mode)
+                                create_metrics(f"{summary_length}", "Summary Type")
 
-                            # Display summary with cross-browser safe styling
+                            # Display summary
                             st.markdown("#### 📝 Generated Summary")
-                            create_safe_summary_box(summary, is_light_mode)
+                            create_summary_box(summary)
 
                             # Show visualizations if enabled
                             if show_graphs and PLOTLY_AVAILABLE:
@@ -1005,94 +1442,94 @@ def run_summarizer_app():
                                     st.markdown("##### Document & Summary Statistics")
 
                                     try:
-                                        # Summary comparison chart with cross-browser safe styling
+                                        # Summary comparison chart with improved text visibility
                                         fig_comparison = px.bar(
                                             x=['Original Document', 'Generated Summary'],
                                             y=[word_count, summary_word_count],
                                             title="Word Count Comparison",
                                             color=['Original Document', 'Generated Summary'],
-                                            color_discrete_sequence=['#22c55e', '#16a34a'] if is_light_mode else [
-                                                '#06b6d4', '#10b981']
+                                            color_discrete_sequence=['#22c55e', '#16a34a']
                                         )
 
-                                        # Apply theme configuration
-                                        if is_light_mode:
-                                            theme_config = get_plotly_light_theme()
-                                            fig_comparison.update_layout(**theme_config['layout'])
-                                            fig_comparison.update_layout(
-                                                title_font_color='#16a34a',
-                                                showlegend=False
-                                            )
-                                        else:
-                                            theme_config = get_plotly_dark_theme()
-                                            fig_comparison.update_layout(**theme_config['layout'])
-                                            fig_comparison.update_layout(
-                                                title_font_color='white',
-                                                showlegend=False
-                                            )
+                                        # Improved dark nebula theme configuration
+                                        fig_comparison.update_layout(
+                                            paper_bgcolor='rgba(15, 27, 15, 0.9)',
+                                            plot_bgcolor='rgba(15, 27, 15, 0.9)',
+                                            title_font_color='#22c55e',
+                                            title_font_size=20,
+                                            title_x=0.5,
+                                            font=dict(color='#f8fafc', size=14),
+                                            xaxis=dict(
+                                                tickfont=dict(color='#f8fafc', size=14),
+                                                title=dict(text='Document Type', font=dict(color='#f8fafc', size=16))
+                                            ),
+                                            yaxis=dict(
+                                                tickfont=dict(color='#f8fafc', size=14),
+                                                title=dict(text='Word Count', font=dict(color='#f8fafc', size=16))
+                                            ),
+                                            showlegend=False,
+                                            margin=dict(l=50, r=50, t=80, b=50)
+                                        )
 
-                                        # Use safe chart container
-                                        def create_comparison_chart():
-                                            st.plotly_chart(fig_comparison, use_container_width=True)
+                                        # Update traces for better visibility
+                                        fig_comparison.update_traces(
+                                            textfont_color='#f8fafc',
+                                            marker_line_color='#22c55e',
+                                            marker_line_width=2
+                                        )
 
-                                        create_safe_chart_container(create_comparison_chart, is_light_mode)
+                                        st.plotly_chart(fig_comparison, use_container_width=True)
 
-                                        # Compression gauge
+                                        # Compression gauge with improved visibility
                                         fig_gauge = go.Figure(go.Indicator(
                                             mode="gauge+number+delta",
                                             value=compression_ratio,
                                             domain={'x': [0, 1], 'y': [0, 1]},
-                                            title={'text': "Compression Efficiency %"},
-                                            delta={'reference': 50},
+                                            title={'text': "Compression Efficiency %",
+                                                   'font': {'color': '#f8fafc', 'size': 18}},
+                                            delta={'reference': 50, 'font': {'color': '#f8fafc', 'size': 16}},
+                                            number={'font': {'color': '#f8fafc', 'size': 32}},
                                             gauge={
-                                                'axis': {'range': [None, 100]},
-                                                'bar': {'color': "#22c55e" if is_light_mode else "#06b6d4"},
+                                                'axis': {'range': [None, 100], 'tickcolor': '#f8fafc',
+                                                         'tickfont': {'color': '#f8fafc', 'size': 12}},
+                                                'bar': {'color': "#22c55e"},
                                                 'steps': [
-                                                    {'range': [0, 25], 'color': "#fca5a5"},
-                                                    {'range': [25, 50], 'color': "#fde047"},
-                                                    {'range': [50, 75], 'color': "#86efac"},
-                                                    {'range': [75, 100],
-                                                     'color': "#22c55e" if is_light_mode else "#06b6d4"}
+                                                    {'range': [0, 25], 'color': "rgba(239, 68, 68, 0.3)"},
+                                                    {'range': [25, 50], 'color': "rgba(245, 158, 11, 0.3)"},
+                                                    {'range': [50, 75], 'color': "rgba(34, 197, 94, 0.3)"},
+                                                    {'range': [75, 100], 'color': "rgba(34, 197, 94, 0.5)"}
                                                 ],
                                                 'threshold': {
-                                                    'line': {'color': "#374151" if is_light_mode else "white",
-                                                             'width': 4},
+                                                    'line': {'color': "#22c55e", 'width': 4},
                                                     'thickness': 0.75,
                                                     'value': 80
                                                 }
                                             }
                                         ))
 
-                                        # Apply theme to gauge
-                                        if is_light_mode:
-                                            theme_config = get_plotly_light_theme()
-                                            fig_gauge.update_layout(**theme_config['layout'])
-                                        else:
-                                            theme_config = get_plotly_dark_theme()
-                                            fig_gauge.update_layout(**theme_config['layout'])
+                                        # Improved dark nebula theme for gauge
+                                        fig_gauge.update_layout(
+                                            paper_bgcolor='rgba(15, 27, 15, 0.9)',
+                                            plot_bgcolor='rgba(15, 27, 15, 0.9)',
+                                            font=dict(color='#f8fafc'),
+                                            height=400,
+                                            margin=dict(l=50, r=50, t=50, b=50)
+                                        )
 
-                                        fig_gauge.update_layout(height=400)
+                                        st.plotly_chart(fig_gauge, use_container_width=True)
 
-                                        # Use safe chart container for gauge
-                                        def create_gauge_chart():
-                                            st.plotly_chart(fig_gauge, use_container_width=True)
-
-                                        create_safe_chart_container(create_gauge_chart, is_light_mode)
-
-                                        # Reading time comparison with cross-browser safe metrics
+                                        # Reading time comparison
                                         original_read_time = max(1, round(word_count / 250))
                                         summary_read_time = max(1, round(summary_word_count / 250))
                                         time_saved = max(0, original_read_time - summary_read_time)
 
                                         col1, col2, col3 = st.columns(3)
                                         with col1:
-                                            create_safe_metrics(f"{original_read_time}", "Original Read Time (min)",
-                                                                is_light_mode)
+                                            create_metrics(f"{original_read_time}", "Original Read Time (min)")
                                         with col2:
-                                            create_safe_metrics(f"{summary_read_time}", "Summary Read Time (min)",
-                                                                is_light_mode)
+                                            create_metrics(f"{summary_read_time}", "Summary Read Time (min)")
                                         with col3:
-                                            create_safe_metrics(f"{time_saved}", "Time Saved (min)", is_light_mode)
+                                            create_metrics(f"{time_saved}", "Time Saved (min)")
 
                                     except Exception as e:
                                         st.warning(f"Advanced visualization error: {e}")
@@ -1100,7 +1537,7 @@ def run_summarizer_app():
                             elif show_graphs and not PLOTLY_AVAILABLE:
                                 st.info("📈 Install Plotly for advanced visualizations: pip install plotly")
 
-                            # Download section with cross-browser safe styling
+                            # Download section
                             st.markdown("---")
                             st.markdown("#### 💾 Download Your Analysis")
 
@@ -1130,12 +1567,12 @@ AI-Powered Analysis with Interactive Visualizations
 
                             col1, col2, col3 = st.columns([1, 1, 1])
                             with col2:
-                                create_safe_download_button(
+                                st.download_button(
                                     "📥 Download Complete Report",
                                     download_content,
                                     filename,
                                     "text/plain",
-                                    "Download summary with metadata and statistics"
+                                    help="Download summary with metadata and statistics"
                                 )
 
                         except Exception as e:
@@ -1148,10 +1585,10 @@ AI-Powered Analysis with Interactive Visualizations
 
     else:
         # Welcome section
-        st.markdown("###  Welcome to Smart Research Summarizer!")
+        st.markdown("### Welcome to Smart Research Summarizer!")
         st.markdown("Get started by uploading a PDF research paper above.")
 
-        # Simplified info about features - removed all the status text
+        # Info about features
         info_text = f"""
 **📊 Summary Options:**
 
@@ -1185,9 +1622,9 @@ AI-Powered Analysis with Interactive Visualizations
             for dep in missing_deps:
                 st.code(dep, language="bash")
 
-    # Simplified footer - removed cross-browser text
+    # Footer
     st.markdown(f"""
-    <div style="text-align: center; margin-top: 50px; padding: 20px; color: white; border-top: 1px solid #4a5568;">
+    <div style="text-align: center; margin-top: 50px; padding: 20px; color: #cbd5e1; border-top: 1px solid rgba(34, 197, 94, 0.3);">
         <p style="margin: 0; font-size: 12px; font-weight: 500;">© 2025 Smart Research Summarizer. All rights reserved.</p>
         <p style="margin: 5px 0 0 0; font-size: 10px;">AI-Powered Analysis with Interactive Visualizations</p>
         <p style="margin: 5px 0 0 0; font-size: 10px;">
@@ -1206,27 +1643,28 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    # Initialize session state - Dark mode is now default
+    # Initialize session state
     if 'show_app' not in st.session_state:
         st.session_state.show_app = False
-    if 'light_mode' not in st.session_state:
-        st.session_state.light_mode = False  # Dark mode default
 
-    # Load CSS with cross-browser support
+    # Load CSS
     load_css()
     render_streamlit_navbar()
 
-    # Simplified sidebar - removed cross-browser status messages
-    if CSS_HANDLER_AVAILABLE:
-        st.sidebar.success(" Enhanced styling active")
-        st.sidebar.markdown("**Cross-browser compatibility enabled**")
-    else:
-        st.sidebar.info("📝 Using standard styling")
+    # Enhanced sidebar for nebula theme
+    st.sidebar.success("✨ Nebula mode active")
+    st.sidebar.markdown("**Beautiful green nebula interface**")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("🌌 **Features:**")
+    st.sidebar.markdown("• Multi-layered nebula effects")
+    st.sidebar.markdown("• Animated stellar particles")
+    st.sidebar.markdown("• Dynamic cosmic backgrounds")
+    st.sidebar.markdown("• Responsive glow effects")
 
     # Route to appropriate page
     if st.session_state.show_app:
         try:
-            with st.spinner(" Loading Smart Research Summarizer..."):
+            with st.spinner("🌌 Loading Smart Research Summarizer..."):
                 import time
                 time.sleep(1)
             run_summarizer_app()
