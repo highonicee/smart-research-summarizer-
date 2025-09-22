@@ -56,8 +56,8 @@ Smart Research Summarizer is an AI-powered tool that helps researchers, students
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/smart-research-summarizer.git
-cd smart-research-summarizer
+git clone https://github.com/highonicee/smart-research-summarizer-.git
+cd smart-research-summarizer-
 ```
 
 Install dependencies:
